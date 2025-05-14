@@ -1,0 +1,9 @@
+services:
+  nginx:
+    build: .
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./static:/usr/share/nginx/html:ro
+    restart: always
