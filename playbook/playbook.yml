@@ -1,0 +1,57 @@
+- name: Configure Nginx Web Server
+  hosts: all
+  become: yes
+  vars:
+    nginx_config_path: /etc/nginx/sites-available/default
+    web_root: /var/www/html
+    html_file_path: "index.html"
+    server_name: "aton_intern.com"
+    ports: [80, 443]
+
+  tasks:
+    - name: Install Nginx
+      apt:
+        name: nginx
+        state: present
+        update_cache: yes
+
+    - name: Create web root directory
+      file:
+        path: "{{ web_root }}"
+        state: directory
+        owner: www-data
+        group: www-data
+        mode: "0755"
+
+    - name: Copy HTML file to web directory
+      copy:
+        src: "{{ html_file_path }}"
+        dest: /var/www/html/index.html
+        mode: "0644"
+        owner: www-data
+        group: www-data
+
+    - name: Template Nginx config
+      template:
+        src: templates/nginx.conf.j2
+        dest: "{{ nginx_config_path }}"
+        mode: "0644"
+      notify: Reload Nginx
+
+    - name: Test Nginx configuration
+      command: nginx -t
+      register: nginx_test
+      changed_when: false
+      failed_when: nginx_test.rc != 0
+
+    - name: Ensure Nginx is running
+      service:
+        name: nginx
+        state: started
+        enabled: yes
+
+  handlers:
+    - name: Reload Nginx
+      service:
+        name: nginx
+        state: reloaded

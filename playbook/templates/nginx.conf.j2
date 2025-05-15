@@ -1,0 +1,13 @@
+server {
+    {% for port in ports %}
+    listen {{ port }} default_server;
+    {% endfor %}
+    server_name {{ server_name }};
+
+    root {{ web_root }};
+    index index.html;
+
+    location / {
+        try_files $uri $uri/ =404;
+    }
+}
